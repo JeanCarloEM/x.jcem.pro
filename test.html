@@ -2,31 +2,101 @@
 <html>
 
 <head>
-  <meta charset='utf-8'>
+  <meta charset="UTF-8">
   <script>
-    ((L) => {
-      const sep = "'";
-      const root = (L.protocol.indexOf('file') < 0)
-        ? '/'
-        : '';
+    ((L, w) => {
+      const lib = "'";
+      const root = '/';
+
+      if (typeof fetch === 'undefined' || !fetch) {
+        L.href = root + lib + "/compatibility.html";
+      }
+
       var Q = L.search.trim().replace(/^[\/_?]+/, '');
 
       if (Q.length === 0) {
-        L.href = root + sep + "/index.html";
+        L.href = root + lib + "/index.html";
         return;
       }
 
-      var p = '';
-      for (var k = 0; k < Q.length; k++) {
-        p += Q.charCodeAt(k).toString(36) + ((k < (Q.length - 1)) ? '/' : '');
+      w.base = (n, f, t) => {
+        if (!n || (n + '').trim().length === 0) {
+          return '0';
+        }
+
+        return ((b10) => {
+          /* convert a integer to char base */
+          let to = (n1, c) => {
+            n1 = BigInt(n1);
+            var len = BigInt(Math.min(c.length, 10));
+            var r = '';
+            while (n1 > BigInt(0)) {
+              r = c[n1 % len] + r;
+              n1 = BigInt(n1 / len, 10);
+            }
+
+            return r;
+          };
+
+          /* convert char base to bigInt */
+          function from(s, c) {
+            var len = Math.min(c.length, 10);
+            var r = BigInt(0);
+            for (var i = 0; i < s.length; i++) {
+              let p = c.indexOf(s[i]);
+              if (p < 0) {
+                return NaN;
+              }
+              r += BigInt(p) * (BigInt(c.length) ^ BigInt(s.length - i - 1));
+            }
+            return r;
+          }
+
+          f = f === 10 ? b10 : f;
+          t = t === 10 ? b10 : t;
+
+          if (f.length !== 10 && t.length !== 10) {
+            return to(from(n, f), t);
+          }
+
+          if (f.length === 10 && t.length === 10) {
+            return n;
+          }
+
+          if (f.length === 10) {
+            return to(n, t);
+          }
+
+          var r = from(n, f);
+          return (r >= Number.MAX_SAFE_INTEGER) ? r : Number(r);
+        })('0123456789');
       }
 
-      fetch(root + sep + "/code/" + p + '.json').then((d) => {
-        fetch(root + sep + "/hash/" + d.body[0].split('').join('/') + '.json').then((u) => {
-          L.href = u.body[0];
-        });
-      });
-    })(window.location);
+      fetch(root + lib + "/map.json").then((r) => {
+        return r.json();
+      }).then((map) => {
+        map = map[0];
+        w.map = map;
+        w.b36 = '0123456789abcdefghijklmnopqrstuvxywz';
+        var ll = w.base('sdasd18d', w.map, 10);
+        var xx = w.base(ll, 10, w.map)
+        console.log('teste: "' + ll + '" -> "' + xx + '"');
+        var p = w.base(Q, w.map, 10);
+        console.warn(p);
+        var p = w.base(p, 10, w.b36);
+        console.warn(p);
+
+        fetch(root + lib + "/code/" + p + '.json').then((r) => {
+          return r.json();
+        }).then((d) => {
+          fetch(root + lib + "/hash/" + d.body[0].split('').join('/') + '.json').then((r) => {
+            return r.json();
+          }).then((u) => {
+            L.href = u.body[0];
+          }).catch((hash) => { });;
+        }).catch((code) => { });;
+      }).catch((map) => { });
+    })(window.location, window);
   </script>
 </head>
 
