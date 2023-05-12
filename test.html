@@ -7,6 +7,7 @@
     ((L, w) => {
       const lib = "'";
       const root = '/';
+      const b36 = '0123456789abcdefghijklmnopqrstuvxywz';
 
       if (typeof fetch === 'undefined' || !fetch) {
         L.href = root + lib + "/compatibility.html";
@@ -19,37 +20,55 @@
         return;
       }
 
+      w.iroot = (base, root) => {
+        if (typeof base !== 'bigint' || typeof root !== 'bigint') throw new Error("Arguments must be bigints.");
+
+        let s = base + 1n;
+        let k1 = root - 1n;
+        let u = base;
+        while (u < s) {
+          s = u;
+          u = ((u * k1) + base / (u ** k1)) / root;
+        }
+        return s;
+      };
+
       w.base = (n, f, t) => {
         if (!n || (n + '').trim().length === 0) {
           return '0';
         }
-
+        // https://gist.github.com/kevinyan815/f71b2f5ca3541631abd2e50f3929739b
         return ((b10) => {
-          /* convert a integer to char base */
+          /* bigInt -> char */
           let to = (n1, c) => {
             n1 = BigInt(n1);
-            var len = BigInt(Math.min(c.length, 10));
+            var l = BigInt(c.length);
+            let z = 0n;
             var r = '';
-            while (n1 > BigInt(0)) {
-              r = c[n1 % len] + r;
-              n1 = BigInt(n1 / len, 10);
+            while (n1 > z) {
+              //console.log(n1 + ":" + (n1 % l) + '-' + c[n1 % l]);
+              r = c[n1 % l] + r;
+              n1 = BigInt(n1 / l);
             }
 
             return r;
           };
 
-          /* convert char base to bigInt */
-          function from(s, c) {
-            var len = Math.min(c.length, 10);
-            var r = BigInt(0);
-            for (var i = 0; i < s.length; i++) {
-              let p = c.indexOf(s[i]);
-              if (p < 0) {
-                return NaN;
-              }
-              r += BigInt(p) * (BigInt(c.length) ^ BigInt(s.length - i - 1));
-            }
-            return r;
+          /* char -> bigInt */
+          let from = (s, c) => {
+            var r = 0n;
+            let cc = BigInt(s.length);
+            let bs = BigInt(c.length);
+            //console.log(s);
+            //console.log(s[0] + '-' + c.indexOf(s[0]) + ' :: ' + (BigInt(c.indexOf(s[0])) ** BigInt(cc)));
+            s = typeof s === 'string' ? s.split("") : s;
+            return (cc === 1) ? c.indexOf(s[0]) : s.reduce((a, p) => {
+              a = (typeof a === 'string') ? (BigInt(c.indexOf(a)) * (bs ** BigInt(--cc))) : a;
+              let k = BigInt(c.indexOf(p));
+              let r = k * ((cc === 1) ? 1n : bs ** BigInt(--cc));
+              //console.log(a + " - " + p + "(" + k + ") : " + (cc + 1n) + " >> " + r );
+              return a + r;
+            });
           }
 
           f = f === 10 ? b10 : f;
@@ -68,34 +87,34 @@
           }
 
           var r = from(n, f);
+
           return (r >= Number.MAX_SAFE_INTEGER) ? r : Number(r);
         })('0123456789');
-      }
+      };
 
       fetch(root + lib + "/map.json").then((r) => {
         return r.json();
       }).then((map) => {
-        map = map[0];
-        w.map = map;
-        w.b36 = '0123456789abcdefghijklmnopqrstuvxywz';
-        var ll = w.base('sdasd18d', w.map, 10);
-        var xx = w.base(ll, 10, w.map)
-        console.log('teste: "' + ll + '" -> "' + xx + '"');
-        var p = w.base(Q, w.map, 10);
-        console.warn(p);
-        var p = w.base(p, 10, w.b36);
-        console.warn(p);
+        w.map = map = map[0];
+        /* tornar a menor string, mas com caracteres aceitos para pastas */
+        var p = w.base(Q, w.map, b36);
 
-        fetch(root + lib + "/code/" + p + '.json').then((r) => {
+        fetch(root + lib + "/code/" + p.split('').join('/') + '.json').then((r) => {
           return r.json();
         }).then((d) => {
           fetch(root + lib + "/hash/" + d.body[0].split('').join('/') + '.json').then((r) => {
             return r.json();
           }).then((u) => {
             L.href = u.body[0];
-          }).catch((hash) => { });;
-        }).catch((code) => { });;
-      }).catch((map) => { });
+          }).catch((hash) => {
+            console.log('Hash não encontrado.');
+          });
+        }).catch((code) => {
+          console.log('Código não encontrado.');
+        });;
+      }).catch((map) => {
+        console.log('Mapa não encontrado.');
+      });
     })(window.location, window);
   </script>
 </head>
