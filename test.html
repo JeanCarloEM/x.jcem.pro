@@ -2,7 +2,11 @@
 <html>
 
 <head>
+
   <meta charset="UTF-8">
+  <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+
   <script>
     ((L, w) => {
       const lib = "'";
@@ -37,7 +41,6 @@
         if (!n || (n + '').trim().length === 0) {
           return '0';
         }
-        // https://gist.github.com/kevinyan815/f71b2f5ca3541631abd2e50f3929739b
         return ((b10) => {
           /* bigInt -> char */
           let to = (n1, c) => {
@@ -46,7 +49,6 @@
             let z = 0n;
             var r = '';
             while (n1 > z) {
-              //console.log(n1 + ":" + (n1 % l) + '-' + c[n1 % l]);
               r = c[n1 % l] + r;
               n1 = BigInt(n1 / l);
             }
@@ -59,14 +61,11 @@
             var r = 0n;
             let cc = BigInt(s.length);
             let bs = BigInt(c.length);
-            //console.log(s);
-            //console.log(s[0] + '-' + c.indexOf(s[0]) + ' :: ' + (BigInt(c.indexOf(s[0])) ** BigInt(cc)));
             s = typeof s === 'string' ? s.split("") : s;
             return (cc === 1) ? c.indexOf(s[0]) : s.reduce((a, p) => {
               a = (typeof a === 'string') ? (BigInt(c.indexOf(a)) * (bs ** BigInt(--cc))) : a;
               let k = BigInt(c.indexOf(p));
               let r = k * ((cc === 1) ? 1n : bs ** BigInt(--cc));
-              //console.log(a + " - " + p + "(" + k + ") : " + (cc + 1n) + " >> " + r );
               return a + r;
             });
           }
@@ -117,6 +116,101 @@
       });
     })(window.location, window);
   </script>
+
+  <style>
+    noscript,
+    .lds {
+      width: calc(3 * 1.25rem);
+      height: calc(3 * 1.25rem);
+
+      position: fixed;
+      top: 50vh;
+      left: 50vw;
+      margin-left: calc(-1.5 * 1.25rem);
+      margin-top: calc(-1.5 * 1.25rem);
+    }
+
+    .lds div {
+      box-sizing: border-box;
+      display: block;
+      position: absolute;
+      width: 3rem;
+      height: 3rem;
+      margin: 8px;
+      border: 8px solid #ccc;
+      border-radius: 50%;
+      animation: lds 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+      border-color: #ccc transparent transparent transparent;
+    }
+
+    .lds div:nth-child(1) {
+      animation-delay: -0.45s;
+    }
+
+    .lds div:nth-child(2) {
+      animation-delay: -0.3s;
+    }
+
+    .lds div:nth-child(3) {
+      animation-delay: -0.15s;
+    }
+
+    @keyframes lds {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    * {
+      font-family: "Noto Sans", "Tahoma", "Arial", "Sans-serif" !important;
+      line-height: 1.5rem;
+      margin: 0;
+      padding: 0;
+      color: #222;
+    }
+
+    noscript {
+      display: block;
+      width: 280px;
+      max-width: 280px;
+      height: 160px;
+      margin-left: calc(-140px - 1rem);
+      margin-top: calc(-80px - .5rem);
+      background: rgba(255,255,255,.9);
+      padding: .5rem 1rem;
+      border-left: .5rem solid #eee;
+    }
+
+    noscript span {
+      opacity: .6;
+      font-size: .9rem;
+    }
+
+    noscript p {
+      margin-top: .5rem;
+      font-weight: 600;
+    }
+
+    noscript p span {
+      font-size: 1.1rem;
+    }
+  </style>
 </head>
+
+<body>
+  <div class="lds">
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+  <noscript><span>There is something <strong>wrong</strong> here!</span>
+    <p><span>#noScript</span> <u>Javascript is disabled</u>, preventing us from directing you to the address.</p>
+  </noscript>
+</body>
 
 </html>
