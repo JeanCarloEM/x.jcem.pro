@@ -10,6 +10,7 @@
       const lib = "'";
       const root = '/';
       const b36 = '0123456789abcdefghijklmnopqrstuvxywz';
+      w.b36 = b36;
 
       if (typeof fetch === 'undefined' || !fetch) {
         L.href = root + lib + "/compatibility.html";
@@ -35,7 +36,7 @@
         return s;
       };
 
-      w.base = async (n, f, t, clb) => {
+      w.base = async (n, f, t) => {
         if (!n || (n + '').trim().length === 0) {
           return '0';
         }
@@ -72,20 +73,20 @@
           t = t === 10 ? b10 : t;
 
           if (f.length !== 10 && t.length !== 10) {
-            return clb(to(from(n, f), t));
+            return to(from(n, f), t);
           }
 
           if (f.length === 10 && t.length === 10) {
-            return clb(n);
+            return n;
           }
 
           if (f.length === 10) {
-            return clb(to(n, t));
+            return to(n, t);
           }
 
           var r = from(n, f);
 
-          return clb((r >= Number.MAX_SAFE_INTEGER) ? r : Number(r));
+          return (r >= Number.MAX_SAFE_INTEGER) ? r : Number(r);
         })('0123456789');
       };
 
@@ -94,7 +95,7 @@
       }).then((map) => {
         w.map = map = map[0];
         /* tornar a menor string, mas com caracteres aceitos para pastas */
-        w.base(Q, w.map, b36, (p) => {
+        w.base(Q, w.map, b36).then((p) => {
           fetch(root + lib + "/code/" + p.split('').join('/') + '.json').then((r) => {
             return r.json();
           }).then((d) => {
