@@ -2,9 +2,7 @@
 <html>
 
 <head>
-
   <meta charset="UTF-8">
-  <meta http-equiv='X-UA-Compatible' content='IE=edge'>
   <meta name='viewport' content='width=device-width, initial-scale=1'>
 
   <script>
@@ -37,7 +35,7 @@
         return s;
       };
 
-      w.base = (n, f, t) => {
+      w.base = async (n, f, t, clb) => {
         if (!n || (n + '').trim().length === 0) {
           return '0';
         }
@@ -68,26 +66,26 @@
               let r = k * ((cc === 1) ? 1n : bs ** BigInt(--cc));
               return a + r;
             });
-          }
+          };
 
           f = f === 10 ? b10 : f;
           t = t === 10 ? b10 : t;
 
           if (f.length !== 10 && t.length !== 10) {
-            return to(from(n, f), t);
+            return clb(to(from(n, f), t));
           }
 
           if (f.length === 10 && t.length === 10) {
-            return n;
+            return clb(n);
           }
 
           if (f.length === 10) {
-            return to(n, t);
+            return clb(to(n, t));
           }
 
           var r = from(n, f);
 
-          return (r >= Number.MAX_SAFE_INTEGER) ? r : Number(r);
+          return clb((r >= Number.MAX_SAFE_INTEGER) ? r : Number(r));
         })('0123456789');
       };
 
@@ -96,21 +94,21 @@
       }).then((map) => {
         w.map = map = map[0];
         /* tornar a menor string, mas com caracteres aceitos para pastas */
-        var p = w.base(Q, w.map, b36);
-
-        fetch(root + lib + "/code/" + p.split('').join('/') + '.json').then((r) => {
-          return r.json();
-        }).then((d) => {
-          fetch(root + lib + "/hash/" + d.body[0].split('').join('/') + '.json').then((r) => {
+        w.base(Q, w.map, b36, (p) => {
+          fetch(root + lib + "/code/" + p.split('').join('/') + '.json').then((r) => {
             return r.json();
-          }).then((u) => {
-            L.href = u.body[0];
-          }).catch((hash) => {
-            console.log('Hash não encontrado.');
-          });
-        }).catch((code) => {
-          console.log('Código não encontrado.');
-        });;
+          }).then((d) => {
+            fetch(root + lib + "/hash/" + d.body[0].split('').join('/') + '.json').then((r) => {
+              return r.json();
+            }).then((u) => {
+              L.href = u.body[0];
+            }).catch((hash) => {
+              console.log('Hash não encontrado.');
+            });
+          }).catch((code) => {
+            console.log('Código não encontrado.');
+          });;
+        });
       }).catch((map) => {
         console.log('Mapa não encontrado.');
       });
@@ -180,7 +178,7 @@
       height: 160px;
       margin-left: calc(-140px - 1rem);
       margin-top: calc(-80px - .5rem);
-      background: rgba(255,255,255,.9);
+      background: rgba(255, 255, 255, .9);
       padding: .5rem 1rem;
       border-left: .5rem solid #eee;
     }
