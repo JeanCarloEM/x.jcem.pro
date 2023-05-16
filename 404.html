@@ -4,19 +4,61 @@
 <head>
   <meta charset="UTF-8">
   <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <title>Redirecting...</title>
 
   <script>
     ((L, w) => {
       const lib = "'";
       const root = '/';
-      const b36 = '0123456789abcdefghijklmnopqrstuvxywz';
-      w.b36 = b36;
 
-      if (typeof fetch === 'undefined' || !fetch) {
+      if (typeof BigInt === 'undefined' || !BigInt) {
         L.href = root + lib + "/compatibility.html";
       }
 
-      var Q = L.search.trim().replace(/^[\/_?]+/, '');
+      const _ = (url) => {
+        return new Promise((r, e) => {
+          if (true || typeof fetch === 'undefined' || !fetch) {
+            try {
+              let x = new XMLHttpRequest();
+              x.open('GET', url, true);
+              x.addEventListener('error', e);
+              x.addEventListener('abort', e);
+              x.addEventListener('loadend', function () {
+                if (this.readyState == 4 && this.status == 200) {
+                  r(JSON.parse(this.responseText));
+                }
+                e();
+              });
+
+              x.send();
+            } catch (_e) {
+              e();
+            }
+          } else {
+            fetch(url).then((r) => {
+              return r.json();
+            }).then((u) => {
+              r(u);
+            }).catch(() => {
+              e();
+            });
+          }
+        });
+      };
+
+      const e04 = (e, m) => {
+        if (m) console.warn(m);
+        //L.href = root + lib + '/error.html?err=' + e + '&q=' + L.href;
+      };
+
+      const Q = ((x) => {
+        try {
+          return x.groups.q.replace(/^([\/_?]+|\/?(index|404)\.html)+/i, '');
+        } catch (error) {
+          console.warn(x);
+          e04('nomatch', "Invalid query string.");
+        }
+      })(L.href.match(/https?:\/\/[^\/$]+(?<q>.*)$/i));
 
       if (Q.length === 0) {
         L.href = root + lib + "/index.html";
@@ -90,28 +132,24 @@
         })('0123456789');
       };
 
-      fetch(root + lib + "/map.json").then((r) => {
-        return r.json();
-      }).then((map) => {
-        w.map = map = map[0];
+      _(root + lib + "/cfg.json").then((cfg) => {
+        var buri = w.buri = cfg.buri;
+        var bnix = w.bnix = cfg.bnix;
+        cfg.db = cfg.db ? cfg.db.trim().replace(/\/*$/, '') : root + lib;
         /* tornar a menor string, mas com caracteres aceitos para pastas */
-        w.base(Q, w.map, b36).then((p) => {
-          fetch(root + lib + "/code/" + p.split('').join('/') + '.json').then((r) => {
-            return r.json();
-          }).then((d) => {
-            fetch(root + lib + "/hash/" + d.body[0].split('').join('/') + '.json').then((r) => {
-              return r.json();
-            }).then((u) => {
+        w.base(Q, w.buri, bnix).then((p) => {
+          _(cfg.db + "/code/" + p.split('').join('/') + '.json').then((d) => {
+            _(cfg.db + "/hash/" + d.body[0].split('').join('/') + '.json').then((u) => {
               L.href = u.body[0];
-            }).catch((hash) => {
-              console.log('Hash não encontrado.');
+            }).catch(() => {
+              e04('nohash', 'HASH not found.');
             });
-          }).catch((code) => {
-            console.log('Código não encontrado.');
-          });;
+          }).catch(() => {
+            e04('nocd', 'CODE not found.');
+          });
         });
-      }).catch((map) => {
-        console.log('Mapa não encontrado.');
+      }).catch(() => {
+        e04('nocfg', 'CFG not found.');
       });
     })(window.location, window);
   </script>
