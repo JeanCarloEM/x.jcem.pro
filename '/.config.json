@@ -1,0 +1,10 @@
+{
+  "ignore": [
+    "test.html",
+    "robot.txt",
+    "README.md",
+    "LICENSE",
+    "index.html",
+    "404.html"
+  ]
+}
