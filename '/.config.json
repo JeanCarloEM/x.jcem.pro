@@ -5,6 +5,10 @@
     "README.md",
     "LICENSE",
     "index.html",
-    "404.html"
+    "404.html",
+    "doc",
+    ".gitignore",
+    "package.json",
+    "package-lock.json"
   ]
 }
